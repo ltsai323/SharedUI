@@ -7,7 +7,7 @@
 # the current directory.
 
 INSTALL_DIR="${1:-thisdir}"
-if [ $INSTALL_DIR = 'thisdir' ]
+if [ $INSTALL_DIR == 'thisdir' ]
 then
   INSTALL_DIR=$(pwd)
 fi
