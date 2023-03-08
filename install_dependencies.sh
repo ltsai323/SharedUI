@@ -116,7 +116,7 @@ then
 
   # get version
   export ICDIR=$(find instantclient_* -maxdepth 0 -type d)
-  if [ $RCPATH == 1]
+  if [ $RCPATH == 1 ]
   then
     # Add to PATH via adding a new line to .bash_profile
     echo "export PATH=${INSTALL_DIR}/${ICDIR}:\$PATH" >> ~/.bashrc
