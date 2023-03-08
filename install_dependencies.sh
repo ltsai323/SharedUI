@@ -58,14 +58,14 @@ fi
 echo 'Installing python modules...'
 
 # install the easy stuff first
-python -m pip install ilock numpy PyQt5 requests cx_Oracle
+python3 -m pip install ilock numpy PyQt5 requests cx_Oracle --user
 
 echo 'Done.'
 echo 'Installing cmsdbldr...'
 
 # Install and auto-add to PATH
 git clone https://github.com/valdasraps/cmsdbldr.git
-if [ $RCPATH == 1]
+if [ $RCPATH == 1 ]
 then
   if [ $machine = "Mac" ]
   then
@@ -98,7 +98,7 @@ then
 
   # get (version-dependent) directory name
   export ICDIR=$(find instantclient_* -maxdepth 0 -type d)
-  if [ $RCPATH == 1]
+  if [ $RCPATH == 1 ]
   then
     # Add to PATH via adding a new line to .bash_profile
     echo "export PATH=${INSTALL_DIR}/${ICDIR}:\$PATH" >> ~/.bash_profile
@@ -144,7 +144,8 @@ then
   # Add to PATH via setx (WARNING: Requires Windows 7 or later, currently untested)
   # setx /M path "%path%;"$INSTALL_DIR'\'$ICDIR
   # FOR NOW:  Attempt to add to bashrc
-  if [ $RCPATH == 1]
+  if [ $RCPATH == 1 ]
+  then
     echo "export PATH=${INSTALL_DIR}/${ICDIR}:\$PATH" >> ~\.bashrc
     echo "export INSTANT_CLIENT_HOME=${INSTALL_DIR}/${ICDIR}" >> ~\.bashrc
   fi
