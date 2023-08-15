@@ -6,13 +6,13 @@ import time
 import os
 
 # FOR DATABASE COMMUNICATION:
-from cmsdbldr_client import LoaderClient
-import atexit  # Close ssh tunnel upon exiting the GUI
+#from cmsdbldr_client import LoaderClient
+#import atexit  # Close ssh tunnel upon exiting the GUI
 import glob
 
 # For uploading XML files in background
-import threading
-import subprocess
+#import threading
+#import subprocess
 
 
 # Import page functionality classes
@@ -143,17 +143,17 @@ PAGE_IDS = {
 	'Baseplates'             : 2,
 	'Sensors'                : 3,
 	'PCBs'                   : 4,
-	#'Protomodules'           : 5,
-	#'Modules'                : 6,
+	'Protomodules'           : 5,
+	'Modules'                : 6,
 	'Tooling'                : 7,
 	'Supplies'               : 8,
 
-	#'1. Sensor - pre-assembly' : 9,
-	#'2. Sensor - post-assembly': 10,
-	#'3. PCB - pre-assembly'    : 11,
-	#'4. PCB - post-assembly'    : 12,
-	#'5. Wirebonding & encapsulating' : 13,
-	#'6. Module testing' : 14,
+	'1. Sensor - pre-assembly' : 9,
+	'2. Sensor - post-assembly': 10,
+	'3. PCB - pre-assembly'    : 11,
+	'4. PCB - post-assembly'    : 12,
+	'5. Wirebonding & encapsulating' : 13,
+	'6. Module testing' : 14,
 
 }
 
@@ -162,10 +162,11 @@ UPLOAD_ENABLED_PAGES = [
 	'Baseplates',  # In theory, should never have to upload these
 	'Sensors',
 	'PCBs',
-	#'Protomodules',
-	#'Modules',
-	#'2. Sensor - post-assembly',
-	#'4. PCB - post-assembly'
+	'Protomodules',
+	'Modules',
+	'2. Sensor - post-assembly',
+	'4. PCB - post-assembly',
+	'5. Wirebonding & encapsulating',
 ]
 
 
@@ -181,11 +182,16 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 
 	def __init__(self):
 		super(mainDesigner,self).__init__(None)
+		print("Setting up filemanager...")
+		fm.setup()
+		print("Finished setting up filemanager.  DATADIR is", fm.DATADIR)
+		print("Setting up user manager...")
+		self.userManager = fm.UserManager()
+		print("Finished setting up user manager.")
+
 		print("Setting up main UI ...")
 		self.setupUi(self)
 		print("Finished setting up main UI.")
-		print("Initializing file manager...")
-		print("Finished initializing file manager.")
 		print("Setting up pages' UI...")
 		self.setupPagesUI()
 		print("Finished setting up pages' UI.")
@@ -201,6 +207,11 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 
 		self.setWindowTitle("Module Assembly User Interface")
 	
+		if not fm.ENABLE_DB_COMMUNICATION:
+			print("DB communcation is DISABLED")
+			return
+		print("DB communication is ENABLED")
+
 		# NEW:  Set up ssh tunnel for DB access!
 		# First, request username:
 		ldlg = UserDialog(self)
@@ -217,8 +228,10 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 		#	attempts += 1
 		self.username = ldlg.getUsername()
 		print("Got username:  ",  ldlg.getUsername())
-		#os.system('ssh -f -N -M -S temp_socket -L 10131:itrac1609-v.cern.ch:10121 -L 10132:itrac1601-v.cern.ch:10121 {}@lxplus.cern.ch'.format(self.username))
-		os.system('ssh -vvv -f -N -M -L 10131:itrac1609-v.cern.ch:10121 -L 10132:itrac1601-v.cern.ch:10121 {}@lxplus.cern.ch'.format(self.username))
+		# WARNING:  May need ot be changed for developemnt DB!
+		# to:  ssh -L 10221:itrac5403-v.cern.ch:10121 -L 10222:itrac5423-v.cern.ch:10121 -L 10223:itrac5432-v.cern.ch:10121 username@lxplus.cern.ch
+		os.system('ssh -fNT -M -S temp_socket -L 10131:itrac1609-v.cern.ch:10121 -L 10132:itrac1601-v.cern.ch:10121 {}@lxplus.cern.ch'.format(self.username))
+		#os.system('ssh -vvv -f -N -M -L 10131:itrac1609-v.cern.ch:10121 -L 10132:itrac1601-v.cern.ch:10121 {}@lxplus.cern.ch'.format(self.username))
 		# Close upon exiting
 		def close_ssh():
 			print("Closing ssh connection")
@@ -229,29 +242,6 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 		# After tunnel established, :
 		fm.connectOracle()
 
-		# NEW:  If not already present, create new ssh key for user
-		# Enables scp without password prompt every time
-		"""
-		ssh_dir = os.path.expanduser('~/.ssh/hgcal_gui')
-		if not os.path.isfile(ssh_dir+'/id_rsa_'.format(self.username)):
-			# generate new ssh key at ~/.ssh/hgcal_gui/id_rsa_USERNAME
-			print("NOTE:  Existing ssh key for DB loader not found.  Generating new ssh key (mandatory)...")
-			if not os.path.exists(ssh_dir):
-				os.mkdir(ssh_dir)
-			keygen_result = subprocess.run(['ssh-keygen', '-f', ssh_dir+'/id_rsa_'+self.username, '-t', 'rsa', '-N', '\'\''])
-			if keygen_result.returncode != 0:
-				print("ERROR:  Problem occurred during ssh-keygen: status {}".format(keygen_result.returncode))
-				print(keygen_result.stderr)
-				exit()
-			copy_result = subprocess.run(['ssh-copy-id', '-i', ssh_dir+'/id_rsa_'+self.username, self.username+'@dbloader-hgcal.cern.ch'])
-			if copy_result.returncode != 0:
-				print("ERROR:  Problem occurred during ssh-copy-id: status {}".format(copy_result.returncode))
-				print(copy_result.stderr)
-				exit()
-		else:
-			print("Existing ssh key found at {}/id_rsa_{}".format(ssh_dir, self.username))
-		"""
-
 
 	def setupPagesUI(self):
 		self.page_view_users       = widget_view_users(None)       ; self.swPages.addWidget(self.page_view_users)
@@ -260,40 +250,38 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 		self.page_view_baseplate   = widget_view_baseplate(None)   ; self.swPages.addWidget(self.page_view_baseplate)
 		self.page_view_sensor      = widget_view_sensor(None)      ; self.swPages.addWidget(self.page_view_sensor)
 		self.page_view_PCB         = widget_view_PCB(None)         ; self.swPages.addWidget(self.page_view_PCB)
-		#self.page_view_protomodule = widget_view_protomodule(None) ; self.swPages.addWidget(self.page_view_protomodule)
-		#self.page_view_module      = widget_view_module(None)      ; self.swPages.addWidget(self.page_view_module)
+		self.page_view_protomodule = widget_view_protomodule(None) ; self.swPages.addWidget(self.page_view_protomodule)
+		self.page_view_module      = widget_view_module(None)      ; self.swPages.addWidget(self.page_view_module)
 		self.page_view_tooling     = widget_view_tooling(None)     ; self.swPages.addWidget(self.page_view_tooling)
-		self.page_view_supplies    = widget_view_supplies(None)    ; self.swPages.addWidget(self.page_view_supplies)	# NEW
+		self.page_view_supplies    = widget_view_supplies(None)    ; self.swPages.addWidget(self.page_view_supplies)
 
-		#self.page_view_sensor_step = widget_view_sensor_step(None) ; self.swPages.addWidget(self.page_view_sensor_step)
-		#self.page_view_sensor_post = widget_view_sensor_post(None) ; self.swPages.addWidget(self.page_view_sensor_post)
-		#self.page_view_pcb_step    = widget_view_pcb_step(None)    ; self.swPages.addWidget(self.page_view_pcb_step)
-		#self.page_view_pcb_post    = widget_view_pcb_post(None)    ; self.swPages.addWidget(self.page_view_pcb_post)
-		#self.page_view_wirebonding = widget_view_wirebonding(None) ; self.swPages.addWidget(self.page_view_wirebonding)
-		#self.page_view_plots       = widget_view_plots(None)       ; self.swPages.addWidget(self.page_view_plots)
+		self.page_view_sensor_step = widget_view_sensor_step(None) ; self.swPages.addWidget(self.page_view_sensor_step)
+		self.page_view_sensor_post = widget_view_sensor_post(None) ; self.swPages.addWidget(self.page_view_sensor_post)
+		self.page_view_pcb_step    = widget_view_pcb_step(None)    ; self.swPages.addWidget(self.page_view_pcb_step)
+		self.page_view_pcb_post    = widget_view_pcb_post(None)    ; self.swPages.addWidget(self.page_view_pcb_post)
+		self.page_view_wirebonding = widget_view_wirebonding(None) ; self.swPages.addWidget(self.page_view_wirebonding)
+		self.page_view_plots       = widget_view_plots(None)       ; self.swPages.addWidget(self.page_view_plots)
 
 
 
 	def initPages(self):
-		self.func_view_users       = cls_func_view_users(            fm, self.page_view_users      , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_users       = cls_func_view_users(            fm, self.userManager, self.page_view_users      , self.setUIPage, self.setSwitchingEnabled)
 
 		self.func_search           = cls_func_search(                fm, self.page_search          , self.setUIPage, self.setSwitchingEnabled)
-		self.func_view_baseplate   = cls_func_view_baseplate(        fm, self.page_view_baseplate  , self.setUIPage, self.setSwitchingEnabled)
-		self.func_view_sensor      = cls_func_view_sensor(           fm, self.page_view_sensor     , self.setUIPage, self.setSwitchingEnabled)
-		self.func_view_PCB         = cls_func_view_PCB(              fm, self.page_view_PCB        , self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_protomodule = cls_func_view_protomodule(      fm, self.page_view_protomodule, self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_module      = cls_func_view_module(           fm, self.page_view_module     , self.setUIPage, self.setSwitchingEnabled)
-
-		#self.func_view_sensor_step = cls_func_view_sensor_step(      fm, self.page_view_sensor_step, self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_sensor_post = cls_func_view_sensor_post(      fm, self.page_view_sensor_post, self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_pcb_step    = cls_func_view_pcb_step(         fm, self.page_view_pcb_step   , self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_pcb_post    = cls_func_view_pcb_post(         fm, self.page_view_pcb_post   , self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_wirebonding = cls_func_view_wirebonding(      fm, self.page_view_wirebonding, self.setUIPage, self.setSwitchingEnabled)
-		#self.func_view_plots       = cls_func_view_plots(            fm, self.page_view_plots,       self.setUIPage, self.setSwitchingEnabled)
-
+		self.func_view_baseplate   = cls_func_view_baseplate(        fm, self.userManager, self.page_view_baseplate  , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_sensor      = cls_func_view_sensor(           fm, self.userManager, self.page_view_sensor     , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_PCB         = cls_func_view_PCB(              fm, self.userManager, self.page_view_PCB        , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_protomodule = cls_func_view_protomodule(      fm, self.userManager, self.page_view_protomodule, self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_module      = cls_func_view_module(           fm, self.userManager, self.page_view_module     , self.setUIPage, self.setSwitchingEnabled)
 		self.func_view_tooling     = cls_func_view_tooling(          fm, self.page_view_tooling    , self.setUIPage, self.setSwitchingEnabled)
 		self.func_view_supplies    = cls_func_view_supplies(         fm, self.page_view_supplies   , self.setUIPage, self.setSwitchingEnabled)
 
+		self.func_view_sensor_step = cls_func_view_sensor_step(      fm, self.userManager, self.page_view_sensor_step, self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_sensor_post = cls_func_view_sensor_post(      fm, self.userManager, self.page_view_sensor_post, self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_pcb_step    = cls_func_view_pcb_step(         fm, self.userManager, self.page_view_pcb_step   , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_pcb_post    = cls_func_view_pcb_post(         fm, self.userManager, self.page_view_pcb_post   , self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_wirebonding = cls_func_view_wirebonding(      fm, self.userManager, self.page_view_wirebonding, self.setUIPage, self.setSwitchingEnabled)
+		self.func_view_plots       = cls_func_view_plots(            fm, self.page_view_plots,       self.setUIPage, self.setSwitchingEnabled)
 
 		# This list must be in the same order that the pages are in in the stackedWidget in the main UI file.
 		# This is the same order as in the dict PAGE_IDS
@@ -304,17 +292,17 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 			self.func_view_baseplate,
 			self.func_view_sensor,
 			self.func_view_PCB,
-			None, #self.func_view_protomodule,
-			None, #self.func_view_module,
+			self.func_view_protomodule,
+			self.func_view_module,
 			self.func_view_tooling,
 			self.func_view_supplies,
 
-			None, #self.func_view_sensor_step,
-			None, #self.func_view_sensor_post,
-			None, #self.func_view_pcb_step,
-			None, #self.func_view_pcb_post,
-			None, #self.func_view_wirebonding,
-			None, #self.func_view_plots,
+			self.func_view_sensor_step,
+			self.func_view_sensor_post,
+			self.func_view_pcb_step,
+			self.func_view_pcb_post,
+			self.func_view_wirebonding,
+			self.func_view_plots,
 			]
 
 
@@ -322,7 +310,6 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 		self.listUsers.itemActivated.connect(self.changeUIPage)
 		self.listInformation.itemActivated.connect(self.changeUIPage)
 		self.listAssembly.itemActivated.connect(self.changeUIPage)
-		#self.listShippingAndReceiving.itemActivated.connect(self.changeUIPage)
 		self.swPages.currentChanged.connect(self.pageChanged)
 
 		self.pbUploadObject.clicked.connect(self.goUploadObject)
@@ -338,7 +325,6 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 
 	def setUIPage(self, which_page, switch_to_page=True, **kwargs):
 		if which_page in PAGE_IDS.keys():
-
 			if self.func_list[PAGE_IDS[which_page]].mode == 'setup':
 				print("page {} not yet setup; doing setup".format(which_page))
 				self.func_list[PAGE_IDS[which_page]].setup()
@@ -352,7 +338,7 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 
 			# NEW:  Enable/disable uploading accordingly.
 			enableUploading = which_page in UPLOAD_ENABLED_PAGES
-			self.pbUploadObject.setEnabled(enableUploading)
+			#self.pbUploadObject.setEnabled(enableUploading)
 			#self.pbUploadDate.setEnabled(  enableUploading)
 			#self.dUpload.setEnabled(       enableUploading)
 			self.leStatus.setText("")
@@ -365,7 +351,6 @@ class mainDesigner(wdgt.QMainWindow,Ui_MainWindow):
 		self.listUsers.setEnabled(enabled)
 		self.listInformation.setEnabled(enabled)
 		self.listAssembly.setEnabled(enabled)
-		#self.listShippingAndReceiving.setEnabled(enabled)
 
 
 	# New, sort of experimental
@@ -554,18 +539,6 @@ class LoginDialog(wdgt.QDialog):
 		print("Got username {}, password {}".format(username, password))
 		print("TEMP:  May need to authenticate in terminal")
 
-		# PERFORM ATTEMPTED UPLOAD
-		# If all good, then:
-		#for f in :
-		#	lc = LoaderClient(["--url", "https://cmsdca.cern.ch/hgc_loader/hgc/int2r", "--login", "--verbose", f])
-		#	load_status = lc.run()
-
-		#if load_status == 0:
-		#	self.accept()
-
-		#self.accept()
-		# Otherwise...
-		# self.reject()
 
 	def handleCancel(self):
 		print("Login canceled")

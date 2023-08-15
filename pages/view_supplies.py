@@ -1,6 +1,7 @@
 from PyQt5 import QtCore
+from filemanager import supplies
 
-PAGE_NAME = "view_tooling"
+PAGE_NAME = "view_supplies"
 #OBJECTTYPE = "sensor_step"
 DEBUG = False
 
@@ -84,11 +85,14 @@ class simple_fsobj_vc(object):
 			self.pteWriteComment.clear()
 
 	def start_editing(self,*args,**kwargs):
+		if self.sbID.text() == '':  return False
 		if not self.fsobj_exists:
 			if type(self.sbID).__name__ == 'QLineEdit':
 				self.fsobj.new(self.sbID.text())
 			else:
 				self.fsobj.new(self.sbID.value())
+
+		return True
 
 	def cancel_editing(self,*args,**kwargs):
 		self.update_info()
@@ -132,7 +136,7 @@ class func(object):
 		self.setMainSwitchingEnabled = setSwitchingEnabled
 
 		self.batch_araldite = simple_fsobj_vc(
-			fm.batch_araldite(),
+			supplies.batch_araldite(),
 			self.page.leAralditeID,
 			self.page.dAralditeReceived,
 			self.page.dAralditeExpires,
@@ -147,7 +151,7 @@ class func(object):
 			)
 		
 		self.batch_wedge = simple_fsobj_vc(
-			fm.batch_wedge(),
+			supplies.batch_wedge(),
 			self.page.leWedgeID,
 			self.page.dWedgeReceived,
 			self.page.dWedgeExpires,
@@ -162,7 +166,7 @@ class func(object):
 			)
 
 		self.batch_sylgard = simple_fsobj_vc(
-			fm.batch_sylgard(),
+			supplies.batch_sylgard(),
 			self.page.leSylgardID,
 			self.page.dSylgardReceived,
 			self.page.dSylgardExpires,
@@ -178,7 +182,7 @@ class func(object):
 			)
 
 		self.batch_bond_wire = simple_fsobj_vc(
-			fm.batch_bond_wire(),
+			supplies.batch_bond_wire(),
 			self.page.leBondWireID,
 			self.page.dBondWireReceived,
 			self.page.dBondWireExpires,
@@ -190,6 +194,36 @@ class func(object):
 			self.page.pteBondWireWriteComment,
 			self.page.pbBondWireDeleteComment,
 			self.page.pbBondWireAddComment,
+			)
+
+		self.batch_tape_50 = simple_fsobj_vc(
+			supplies.batch_tape_50(),
+			self.page.leTape50ID,
+			self.page.dTape50Received,
+			self.page.dTape50Expires,
+			self.page.ckIsTape50Empty,
+			self.page.pbTape50EditNew,
+			self.page.pbTape50Save,
+			self.page.pbTape50Cancel,
+			self.page.listTape50Comments,
+			self.page.pteTape50WriteComment,
+			self.page.pbTape50DeleteComment,
+			self.page.pbTape50AddComment,
+			)
+
+		self.batch_tape_120 = simple_fsobj_vc(
+			supplies.batch_tape_120(),
+			self.page.leTape120ID,
+			self.page.dTape120Received,
+			self.page.dTape120Expires,
+			self.page.ckIsTape120Empty,
+			self.page.pbTape120EditNew,
+			self.page.pbTape120Save,
+			self.page.pbTape120Cancel,
+			self.page.listTape120Comments,
+			self.page.pteTape120WriteComment,
+			self.page.pbTape120DeleteComment,
+			self.page.pbTape120AddComment,
 			)
 
 		self.mode = 'setup'
@@ -242,50 +276,74 @@ class func(object):
 		self.page.leWedgeID.textChanged.connect(self.update_info_batch_wedge)
 		self.page.leSylgardID.textChanged.connect(self.update_info_batch_sylgard)
 		self.page.leBondWireID.textChanged.connect(self.update_info_batch_bond_wire)
+		self.page.leTape50ID.textChanged.connect(self.update_info_batch_tape_50)
+		self.page.leTape120ID.textChanged.connect(self.update_info_batch_tape_120)
 
 		self.page.pbAralditeEditNew.clicked.connect(self.start_editing_batch_araldite)
 		self.page.pbWedgeEditNew.clicked.connect(self.start_editing_batch_wedge)
 		self.page.pbSylgardEditNew.clicked.connect(self.start_editing_batch_sylgard)
 		self.page.pbBondWireEditNew.clicked.connect(self.start_editing_batch_bond_wire)
+		self.page.pbTape50EditNew.clicked.connect(self.start_editing_batch_tape_50)
+		self.page.pbTape120EditNew.clicked.connect(self.start_editing_batch_tape_120)
 
 		self.page.pbAralditeSave.clicked.connect(self.save_editing_batch_araldite)
 		self.page.pbWedgeSave.clicked.connect(self.save_editing_batch_wedge)
 		self.page.pbSylgardSave.clicked.connect(self.save_editing_batch_sylgard)
 		self.page.pbBondWireSave.clicked.connect(self.save_editing_batch_bond_wire)
+		self.page.pbTape50Save.clicked.connect(self.save_editing_batch_tape_50)
+		self.page.pbTape120Save.clicked.connect(self.save_editing_batch_tape_120)
 		
 		self.page.pbAralditeCancel.clicked.connect(self.cancel_editing_batch_araldite)
 		self.page.pbWedgeCancel.clicked.connect(self.cancel_editing_batch_wedge)
 		self.page.pbSylgardCancel.clicked.connect(self.cancel_editing_batch_sylgard)
 		self.page.pbBondWireCancel.clicked.connect(self.cancel_editing_batch_bond_wire)
+		self.page.pbTape50Cancel.clicked.connect(self.cancel_editing_batch_tape_50)
+		self.page.pbTape120Cancel.clicked.connect(self.cancel_editing_batch_tape_120)
 
 		self.page.pbAralditeDeleteComment.clicked.connect(self.delete_comment_batch_araldite)
 		self.page.pbWedgeDeleteComment.clicked.connect(self.delete_comment_batch_wedge)
 		self.page.pbSylgardDeleteComment.clicked.connect(self.delete_comment_batch_sylgard)
 		self.page.pbBondWireDeleteComment.clicked.connect(self.delete_comment_batch_bond_wire)
+		self.page.pbTape50DeleteComment.clicked.connect(self.delete_comment_batch_tape_50)
+		self.page.pbTape120DeleteComment.clicked.connect(self.delete_comment_batch_tape_120)
 
 		self.page.pbAralditeAddComment.clicked.connect(self.add_comment_batch_araldite)
 		self.page.pbWedgeAddComment.clicked.connect(self.add_comment_batch_wedge)
 		self.page.pbSylgardAddComment.clicked.connect(self.add_comment_batch_sylgard)
 		self.page.pbBondWireAddComment.clicked.connect(self.add_comment_batch_bond_wire)
+		self.page.pbTape50AddComment.clicked.connect(self.add_comment_batch_tape_50)
+		self.page.pbTape120AddComment.clicked.connect(self.add_comment_batch_tape_120)
 
 
-
-	@enforce_mode(['view','editing_batch_wedge','editing_batch_sylgard','editing_batch_bond_wire'])
+	@enforce_mode(['view','editing_batch_wedge','editing_batch_sylgard','editing_batch_bond_wire',
+                   'editing_batch_tape_50','editing_batch_tape_120'])
 	def update_info_batch_araldite(self,ID=None,*args,**kwargs):
 		self.batch_araldite.update_info(ID)
 
-	@enforce_mode(['view','editing_batch_araldite','editing_batch_sylgard','editing_batch_bond_wire'])
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_sylgard','editing_batch_bond_wire',
+                   'editing_batch_tape_50','editing_batch_tape_120'])
 	def update_info_batch_wedge(self,ID=None,*args,**kwargs):
 		self.batch_wedge.update_info(ID)
 
-	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_bond_wire'])
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_bond_wire',
+                   'editing_batch_tape_50','editing_batch_tape_120'])
 	def update_info_batch_sylgard(self,ID=None,*args,**kwargs):
 		self.batch_sylgard.update_info(ID)
 
-	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard'])
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard',
+                   'editing_batch_tape_50','editing_batch_tape_120'])
 	def update_info_batch_bond_wire(self,ID=None,*args,**kwargs):
 		self.batch_bond_wire.update_info(ID)
 
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard',
+                   'editing_batch_bond_wire','editing_batch_tape_120'])
+	def update_info_batch_tape_50(self,ID=None,*args,**kwargs):
+		self.batch_tape_50.update_info(ID)
+
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard',
+                   'editing_batch_bond_wire','editing_batch_tape_50'])
+	def update_info_batch_tape_120(self,ID=None,*args,**kwargs):
+		self.batch_tape_120.update_info(ID)
 	
 	@enforce_mode('view')
 	def update_info(self,*args,**kwargs):
@@ -293,53 +351,71 @@ class func(object):
 		self.update_info_batch_wedge()
 		self.update_info_batch_sylgard()
 		self.update_info_batch_bond_wire()
+		self.update_info_batch_tape_50()
+		self.update_info_batch_tape_120()
 
 
 
-	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard','editing_batch_bond_wire'])
+	@enforce_mode(['view','editing_batch_araldite','editing_batch_wedge','editing_batch_sylgard','editing_batch_bond_wire',
+                   'editing_batch_tape_50','editing_batch_tape_120'])
 	def update_elements(self):
 		mode_view                        = self.mode == 'view'
 		mode_editing_batch_araldite      = self.mode == 'editing_batch_araldite'
 		mode_editing_batch_wedge         = self.mode == 'editing_batch_wedge'
 		mode_editing_batch_sylgard       = self.mode == 'editing_batch_sylgard'
 		mode_editing_batch_bond_wire     = self.mode == 'editing_batch_bond_wire'
-
+		mode_editing_batch_tape_50       = self.mode == 'editing_batch_tape_50'
+		mode_editing_batch_tape_120      = self.mode == 'editing_batch_tape_120'
 		self.setMainSwitchingEnabled(mode_view)
 
 		self.page.leAralditeID.setEnabled(not mode_editing_batch_araldite)
 		self.page.leWedgeID.setEnabled(not mode_editing_batch_wedge)
 		self.page.leSylgardID.setEnabled(not mode_editing_batch_sylgard)
 		self.page.leBondWireID.setEnabled(not mode_editing_batch_bond_wire)
+		self.page.leTape50ID.setEnabled(not mode_editing_batch_tape_50)
+		self.page.leTape120ID.setEnabled(not mode_editing_batch_tape_120)
 
 		self.page.pbAralditeEditNew.setEnabled(mode_view)
 		self.page.pbWedgeEditNew.setEnabled(mode_view)
 		self.page.pbSylgardEditNew.setEnabled(mode_view)
 		self.page.pbBondWireEditNew.setEnabled(mode_view)
+		self.page.pbTape50EditNew.setEnabled(mode_view)
+		self.page.pbTape120EditNew.setEnabled(mode_view)
 
 		self.page.pbAralditeSave.setEnabled(mode_editing_batch_araldite)
 		self.page.pbWedgeSave.setEnabled(mode_editing_batch_wedge)
 		self.page.pbSylgardSave.setEnabled(mode_editing_batch_sylgard)
 		self.page.pbBondWireSave.setEnabled(mode_editing_batch_bond_wire)
+		self.page.pbTape50Save.setEnabled(mode_editing_batch_tape_50)
+		self.page.pbTape120Save.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.pbAralditeCancel.setEnabled(mode_editing_batch_araldite)
 		self.page.pbWedgeCancel.setEnabled(mode_editing_batch_wedge)
 		self.page.pbSylgardCancel.setEnabled(mode_editing_batch_sylgard)
 		self.page.pbBondWireCancel.setEnabled(mode_editing_batch_bond_wire)
+		self.page.pbTape50Cancel.setEnabled(mode_editing_batch_tape_50)
+		self.page.pbTape120Cancel.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.dAralditeReceived.setEnabled(mode_editing_batch_araldite)
 		self.page.dWedgeReceived.setEnabled(mode_editing_batch_wedge)
 		self.page.dSylgardReceived.setEnabled(mode_editing_batch_sylgard)
 		self.page.dBondWireReceived.setEnabled(mode_editing_batch_bond_wire)
+		self.page.dTape50Received.setEnabled(mode_editing_batch_tape_50)
+		self.page.dTape120Received.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.dAralditeExpires.setEnabled(mode_editing_batch_araldite)
 		self.page.dWedgeExpires.setEnabled(mode_editing_batch_wedge)
 		self.page.dSylgardExpires.setEnabled(mode_editing_batch_sylgard)
 		self.page.dBondWireExpires.setEnabled(mode_editing_batch_bond_wire)
+		self.page.dTape50Expires.setEnabled(mode_editing_batch_tape_50)
+		self.page.dTape120Expires.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.ckIsAralditeEmpty.setEnabled(mode_editing_batch_araldite)
 		self.page.ckIsWedgeEmpty.setEnabled(mode_editing_batch_wedge)
 		self.page.ckIsSylgardEmpty.setEnabled(mode_editing_batch_sylgard)
 		self.page.ckIsBondWireEmpty.setEnabled(mode_editing_batch_bond_wire)
+		self.page.ckIsTape50Empty.setEnabled(mode_editing_batch_tape_50)
+		self.page.ckIsTape120Empty.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.leSylgardCuring.setEnabled(mode_editing_batch_sylgard)
 
@@ -347,23 +423,29 @@ class func(object):
 		self.page.pbWedgeDeleteComment.setEnabled(mode_editing_batch_wedge)
 		self.page.pbSylgardDeleteComment.setEnabled(mode_editing_batch_sylgard)
 		self.page.pbBondWireDeleteComment.setEnabled(mode_editing_batch_bond_wire)
+		self.page.pbTape50DeleteComment.setEnabled(mode_editing_batch_tape_50)
+		self.page.pbTape120DeleteComment.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.pbAralditeAddComment.setEnabled(mode_editing_batch_araldite)
 		self.page.pbWedgeAddComment.setEnabled(mode_editing_batch_wedge)
 		self.page.pbSylgardAddComment.setEnabled(mode_editing_batch_sylgard)
 		self.page.pbBondWireAddComment.setEnabled(mode_editing_batch_bond_wire)
+		self.page.pbTape50AddComment.setEnabled(mode_editing_batch_tape_50)
+		self.page.pbTape120AddComment.setEnabled(mode_editing_batch_tape_120)
 
 		self.page.pteAralditeWriteComment.setEnabled(mode_editing_batch_araldite)
 		self.page.pteWedgeWriteComment.setEnabled(mode_editing_batch_wedge)
 		self.page.pteSylgardWriteComment.setEnabled(mode_editing_batch_sylgard)
 		self.page.pteBondWireWriteComment.setEnabled(mode_editing_batch_bond_wire)
+		self.page.pteTape50WriteComment.setEnabled(mode_editing_batch_tape_50)
+		self.page.pteTape120WriteComment.setEnabled(mode_editing_batch_tape_120)
 
 
 
 	@enforce_mode('view')
 	def start_editing_batch_araldite(self,*args,**kwargs):
+		if not self.batch_araldite.start_editing():  return
 		self.mode = 'editing_batch_araldite'
-		self.batch_araldite.start_editing()
 		self.update_elements()
 
 	@enforce_mode('editing_batch_araldite')
@@ -389,8 +471,8 @@ class func(object):
 	
 	@enforce_mode('view')
 	def start_editing_batch_wedge(self,*args,**kwargs):
+		if not self.batch_wedge.start_editing():  return
 		self.mode = 'editing_batch_wedge'
-		self.batch_wedge.start_editing()
 		self.update_elements()
 
 	@enforce_mode('editing_batch_wedge')
@@ -416,8 +498,8 @@ class func(object):
 
 	@enforce_mode('view')
 	def start_editing_batch_sylgard(self,*args,**kwargs):
+		if not self.batch_sylgard.start_editing():  return
 		self.mode = 'editing_batch_sylgard'
-		self.batch_sylgard.start_editing()
 		self.update_elements()
 
 	@enforce_mode('editing_batch_sylgard')
@@ -442,8 +524,8 @@ class func(object):
 
 	@enforce_mode('view')
 	def start_editing_batch_bond_wire(self,*args,**kwargs):
+		if not self.batch_bond_wire.start_editing():  return
 		self.mode = 'editing_batch_bond_wire'
-		self.batch_bond_wire.start_editing()
 		self.update_elements()
 
 	@enforce_mode('editing_batch_bond_wire')
@@ -467,6 +549,58 @@ class func(object):
 		self.batch_bond_wire.delete_comment()
 
 
+	@enforce_mode('view')
+	def start_editing_batch_tape_50(self,*args,**kwargs):
+		if not self.batch_tape_50.start_editing():  return
+		self.mode = 'editing_batch_tape_50'
+		self.update_elements()
+
+	@enforce_mode('editing_batch_tape_50')
+	def cancel_editing_batch_tape_50(self,*args,**kwargs):
+		self.mode='view'
+		self.update_elements()
+		self.batch_tape_50.update_info()
+
+	@enforce_mode('editing_batch_tape_50')
+	def save_editing_batch_tape_50(self,*args,**kwargs):
+		self.batch_tape_50.save_editing()
+		self.mode='view'
+		self.update_elements()
+
+	@enforce_mode('editing_batch_tape_50')
+	def add_comment_batch_tape_50(self,*args,**kwargs):
+		self.batch_tape_50.add_comment()
+
+	@enforce_mode('editing_batch_tape_50')
+	def delete_comment_batch_tape_50(self,*args,**kwargs):
+		self.batch_tape_50.delete_comment()
+
+
+	@enforce_mode('view')
+	def start_editing_batch_tape_120(self,*args,**kwargs):
+		if not self.batch_tape_120.start_editing():  return
+		self.mode = 'editing_batch_tape_120'
+		self.update_elements()
+
+	@enforce_mode('editing_batch_tape_120')
+	def cancel_editing_batch_tape_120(self,*args,**kwargs):
+		self.mode='view'
+		self.update_elements()
+		self.batch_tape_120.update_info()
+
+	@enforce_mode('editing_batch_tape_120')
+	def save_editing_batch_tape_120(self,*args,**kwargs):
+		self.batch_tape_120.save_editing()
+		self.mode='view'
+		self.update_elements()
+
+	@enforce_mode('editing_batch_tape_120')
+	def add_comment_batch_tape_120(self,*args,**kwargs):
+		self.batch_tape_120.add_comment()
+
+	@enforce_mode('editing_batch_tape_120')
+	def delete_comment_batch_tape_120(self,*args,**kwargs):
+		self.batch_tape_120.delete_comment()
 
 
 	@enforce_mode('view')
@@ -481,6 +615,11 @@ class func(object):
 			self.update_info_batch_sylgard(kwargs['batch_sylgard'])
 		if "batch_bond_wire" in keys:
 			self.update_info_batch_bond_wire(kwargs['batch_bond_wire'])
+		if "batch_tape_50" in keys:
+			self.update_info_batch_tape_50(kwargs['batch_tape_50'])
+		if "batch_tape_120" in keys:
+			self.update_info_batch_tape_120(kwargs['batch_tape_120'])
+
 
 	@enforce_mode('view')
 	def changed_to(self):

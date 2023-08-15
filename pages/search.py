@@ -3,7 +3,7 @@ import time
 import datetime
 import os
 import json
-from filemanager import fm
+from filemanager import fm, parts
 
 PAGE_NAME = "search"
 DEBUG = False
@@ -19,18 +19,18 @@ PAGE_NAME_DICT = {
 }
 
 PART_DICT = {
-	'Baseplate':   fm.baseplate,
-	'Sensor':      fm.sensor,
-	'PCB':         fm.pcb,
-	#'Protomodule': fm.protomodule,
-	#'Module':      fm.module,
+	'Baseplate':   parts.baseplate,
+	'Sensor':      parts.sensor,
+	'PCB':         parts.pcb,
+	'Protomodule': parts.protomodule,
+	'Module':      parts.module,
 }
 
 PART_NAME_DICT = {
 	'Baseplate':  '{mat_type} Baseplate {channel_density} {geometry}',
 	'Sensor':     '{sen_type} Si Sensor {channel_density} {geometry}',
 	'PCB':        'PCB {channel_density} {geometry}',
-	'Protomdule': '% {sen_type} ProtoModule {channel_density} {geometry}',
+	'Protomodule': '% {sen_type} ProtoModule {channel_density} {geometry}',
 	'Module':     '% {sen_type} Si Module {channel_density} {geometry}'
 }
 
@@ -103,10 +103,20 @@ class func(object):
 	def search(self, *args, **kwargs):  # WIP WIP WIP
 		self.clearResults()
 
-		search_dict = { self.page.cbInstitution:'location_name', self.page.cbShape:'geometry',
-						self.page.cbMaterial:'mat_type', self.page.cbThickness:'sen_type',
-						self.page.cbChannelDensity:'channel_density', #self.page.cbPCBType:'pcb_type',
-						self.page.cbAssmRow:'tray_row', self.page.cbAssmCol:'tray_col' }
+		part_type = self.page.cbPartType.currentText()
+		if not part_type in PART_DICT.keys():
+			print("WARNING: {}s are currently disabled".format(part_type))
+			self.displayResults([], [])
+			return
+		part_temp = PART_DICT[part_type]()  # Constructs instance of searched-for class
+
+		search_dict = { self.page.cbInstitution:'location', self.page.cbShape:'geometry',
+						self.page.cbMaterial:'material', self.page.cbThickness:'sen_type',
+						self.page.cbChannelDensity:'channel_density',
+						self.page.cbAssmRow:"asm_row",
+						self.page.cbAssmCol:"asm_col",
+					  }
+
 		# Treat dCreated separately
 		# Search criteria will be a dict:  'var_name':'value'
 		search_criteria = {}
@@ -118,12 +128,6 @@ class func(object):
 		#	d_c = self.page.dCreated.date()
 		#	d_created = "{}-{}-{}".format(d_c.month(), d_c.day(), d_c.year())
 
-		part_type = self.page.cbPartType.currentText()
-		if not part_type in PART_DICT.keys():  # disabled proto/modules
-			print("WARNING: {}s are currently disabled".format(part_type))
-			self.displayResults([], [])
-			return
-		part_temp = PART_DICT[part_type]()  # Constructs instance of searched-for class
 		# Search for locally-stored parts:
 		part_file_name = os.sep.join([ fm.DATADIR, 'partlist', part_type.lower()+'s.json' ])
 		with open(part_file_name, 'r') as opfl:
@@ -132,18 +136,17 @@ class func(object):
 
 		found_local_parts = {}
 		for part_id, date in part_list.items():
-			print("Checking part for match:", part_id)
 			part_temp.load(part_id)
 			found = True
 			for qty, value in search_criteria.items():
 				if value == '%':  continue  # "wildcard" option, ignore this
 				if str(getattr(part_temp, qty, None)) != value:
-					print("Mismatch:", qty, str(getattr(part_temp, qty, None)), value)
 					found = False
-			if found:  found_local_parts[part_id] = part_temp.display_name
+			if found:  found_local_parts[part_id] = part_temp.kind_of_part
 
 		# Search for parts in DB:
 		found_remote_parts = {}  # serial:type
+		"""
 		if fm.ENABLE_DB_COMMUNICATION:
 			# In general:  Assemble sql query w/ items from search_dict
 			# pt_template:  should be %_%_NAME_HD_% etc - % is a wildcard for anything not specified
@@ -155,14 +158,14 @@ class func(object):
 			#						      sen_type=search_criteria['sen_type'],
 			#						      channel_density=search_criteria['channel_density'],
 			#						      geometry=search_criteria['geometry'], )
-			sql_query = """select p.SERIAL_NUMBER, kp.DISPLAY_NAME
+			sql_query = "*"*"select p.SERIAL_NUMBER, kp.DISPLAY_NAME
 from CMS_HGC_CORE_CONSTRUCT.PARTS p
 inner join CMS_HGC_CORE_CONSTRUCT.KINDS_OF_PARTS kp
 on p.KIND_OF_PART_ID = kp.KIND_OF_PART_ID
 inner join CMS_HGC_CORE_MANAGEMNT.LOCATIONS l
 on p.LOCATION_ID = l.LOCATION_ID
 where kp.DISPLAY_NAME like \'{}\'
-and l.LOCATION_NAME like \'{}\'""".format(pt_query, search_criteria['location_name']) + pt_filter
+and l.LOCATION_NAME like \'{}\'"*"*".format(pt_query, search_criteria['location_name']) + pt_filter
 
 			print("Executing query:\n", sql_query)
 			fm.DB_CURSOR.execute(sql_query)
@@ -176,6 +179,7 @@ and l.LOCATION_NAME like \'{}\'""".format(pt_query, search_criteria['location_na
 			# results:   [{'SERIAL_NUMBER': 'serial'}, ...]
 			for el in data_part:
 				found_remote_parts[el['SERIAL_NUMBER']] = el['DISPLAY_NAME']
+		"""
 
 		# If both in local and remote DB, remove from local list:
 		for rp in found_remote_parts.keys():
@@ -196,17 +200,16 @@ and l.LOCATION_NAME like \'{}\'""".format(pt_query, search_criteria['location_na
 		self.page.cbMaterial      .setEnabled(part_type == 'Baseplate')
 		self.page.cbThickness     .setEnabled(part_type == 'Sensor')
 		self.page.cbChannelDensity.setEnabled(True)
-		#self.page.cbPCBType       .setEnabled(part_type == 'PCB')
 		self.page.ckUseDate       .setEnabled(part_type == 'Protomodule' or part_type == 'Module')
 		useDate = self.page.ckUseDate.isChecked()
-		self.page.dCreated        .setReadOnly(not useDate or not (part_type == 'Protomodule' or part_type == 'Module'))
+		self.page.dCreated        .setReadOnly(not (part_type == 'Protomodule' or part_type == 'Module'))
 		self.page.cbAssmRow       .setEnabled(part_type == 'Protomodule' or part_type == 'Module')
 		self.page.cbAssmCol       .setEnabled(part_type == 'Protomodule' or part_type == 'Module')
 
 	def clearParams(self,*args,**kwargs):
-		for wdgt in [self.page.cbInstituion,     self.page.cbShape,
+		for wdgt in [self.page.cbInstitution,     self.page.cbShape,
 					 self.page.cbMaterial,       self.page.cbThickness,
-					 self.page.cbChannelDensity, self.page.cbPCBType,
+					 self.page.cbChannelDensity,
 					 self.page.cbAssmRow,        self.page.cbAssmCol
 					]:
 			wdgt.setCurrentIndex(0)
@@ -236,12 +239,13 @@ and l.LOCATION_NAME like \'{}\'""".format(pt_query, search_criteria['location_na
 		name = self.page.lwPartList.currentItem().text().replace(" (not uploaded to DB)", "") #.text().split()
 		# find corresponding part type
 		typ = self.page.lwTypeList.item(self.page.lwPartList.currentRow()).text()
+		pageName = None
 		for pttype in PAGE_NAME_DICT:
 			# note:  "module" in "protomodule", but module is last -> self-correcting.
-			print(pttype.lower(), typ.lower())
+			#print(pttype.lower(), typ.lower())
 			if pttype.lower() in typ.lower():
 				pageName = PAGE_NAME_DICT[pttype]
-
+				break
 		self.setUIPage(pageName, ID=name)
 
 

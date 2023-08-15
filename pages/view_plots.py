@@ -1,4 +1,4 @@
-from filemanager import fm
+from filemanager import fm, parts
 from PyQt5 import QtCore
 import time
 import os
@@ -89,7 +89,8 @@ class simple_fsobj_pt(object):  # from tools
 
 
 		self.listFiles.clear()
-		for f in self.fsobj_pt.test_files:
+		if self.fsobj_pt.test_files is None:  return
+		for f in self.fsobj_pt.test_files.split(';;'):
 			name = os.path.split(f)[1]
 			self.listFiles.addItem(name)
 
@@ -125,10 +126,11 @@ class simple_fsobj_pt(object):  # from tools
 		for i in range(self.listComments.count()):
 			self.fsobj_pt.comments.append(str(self.listComments.item(i).text()))
 
-		self.fsobj_pt.test_files = []
+		files = []
 		for i in range(self.listFiles.count()):
-			self.fsobj_pt.test_files.append(str(self.listFiles.item(i).text()))
+			files.append(str(self.listFiles.item(i).text()))
 
+		self.fsobj_pt.test_files = ';;'.join(files)
 		self.fsobj_pt.save()
 		self.update_info()
 
@@ -151,7 +153,10 @@ class simple_fsobj_pt(object):  # from tools
 		new_filepath = fdir + '/' + tmp_filename
 		shutil.copyfile(f, new_filepath)
 		# From here on, the file is ONLY referred to by its name, not the full path!
-		self.fsobj_pt.test_files.append(tmp_filename)
+		if self.fsobj_pt.test_files:
+			self.fsobj_pt.test_files += ';;' + tmp_filename
+		else:
+			self.fsobj_pt.test_files = tmp_filename
 		self.fsobj_pt.save()
 		self.update_info()
 
@@ -160,7 +165,9 @@ class simple_fsobj_pt(object):  # from tools
 		fdir, fname_ = self.fsobj_pt.get_filedir_filename()
 		self.listFiles.takeItem(row)
 		os.remove(fdir + '/' + fname)  # remove file and save immediately (cancelling is hard to implement otherwise)
-		self.fsobj_pt.test_files.remove(fname)
+		files = self.fsobj_pt.test_files.split(';;')
+		del files[row]
+		self.fsobj_pt.test_files = files
 		self.fsobj_pt.save()
 		self.update_info()
 
@@ -174,7 +181,7 @@ class func(object):
 		self.setMainSwitchingEnabled = setSwitchingEnabled
 
 		self.pcb_obj = simple_fsobj_pt(
-			fm.pcb(),
+			parts.pcb(),
 			self.page.leIDPCB,
 			self.page.leStatusPCB,
 			self.page.pbLoadPCB,
@@ -191,7 +198,7 @@ class func(object):
 			self.page.pbAddCommentPCB
 			)
 		self.module_obj = simple_fsobj_pt(
-			fm.module(),
+			parts.module(),
 			self.page.leIDMod,
 			self.page.leStatusMod,
 			self.page.pbLoadMod,
@@ -408,13 +415,13 @@ class func(object):
 
 	@enforce_mode('view')
 	def goPCB(self,*args,**kwargs):
-		ID = self.page.lePCB.text()
+		ID = self.page.leIDPCB.text()
 		if ID != "":
 			self.setUIPage('PCBs',ID=ID)
 
 	@enforce_mode('view')
 	def goMod(self,*args,**kwargs):
-		ID = self.page.leMod.text()
+		ID = self.page.leIDMod.text()
 		if ID != "":
 			self.setUIPage('Modules',ID=ID)
 

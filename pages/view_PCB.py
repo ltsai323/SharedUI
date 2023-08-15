@@ -1,4 +1,4 @@
-from filemanager import fm
+from filemanager import parts
 import os
 import shutil
 import glob
@@ -8,16 +8,6 @@ from PyQt5.QtWidgets import QFileDialog, QWidget
 PAGE_NAME = "view_pcb"
 DEBUG = False
 
-INDEX_TYPE = {
-	'HGCROCV1':0,
-	'HGCROCV2':1,
-	'HGCROCV3':2,
-	'SKIROCV1':3,
-	'SKIROCV2':4,
-	'SKIROCV3':5,
-	'HGCROC dummy':6,
-}
-
 INDEX_SHAPE = {
 	'Full':0,
 	'Top':1,
@@ -25,8 +15,7 @@ INDEX_SHAPE = {
 	'Left':3,
 	'Right':4,
 	'Five':5,
-	'Full':6,
-	'Three':7
+	'Full+Three':6,
 }
 
 INDEX_CHECK = {
@@ -76,12 +65,13 @@ class Filewindow(QWidget):
 
 
 class func(object):
-	def __init__(self,fm,page,setUIPage,setSwitchingEnabled):
+	def __init__(self,fm,userManager,page,setUIPage,setSwitchingEnabled):
+		self.userManager = userManager
 		self.page      = page
 		self.setUIPage = setUIPage
 		self.setMainSwitchingEnabled = setSwitchingEnabled
 
-		self.pcb = fm.pcb()
+		self.pcb = parts.pcb()
 		self.pcb_exists = False
 		self.mode = 'setup'
 
@@ -149,11 +139,6 @@ class func(object):
 		self.page.pbAddFiles.clicked.connect(self.getFile)
 		self.page.pbDeleteFile.clicked.connect(self.deleteFile)
 
-		auth_users = fm.userManager.getAuthorizedUsers(PAGE_NAME)
-		self.index_users = {auth_users[i]:i for i in range(len(auth_users))}
-		for user in self.index_users.keys():
-			self.page.cbInsertUser.addItem(user)
-
 
 	@enforce_mode(['view', 'editing', 'creating'])
 	def update_info(self,ID=None,do_load=True,*args,**kwargs):
@@ -164,29 +149,29 @@ class func(object):
 
 		self.pcb_exists = (ID == self.pcb.ID)
 		
+		self.page.cbInsertUser.clear()
+		auth_users = self.userManager.getAuthorizedUsers(PAGE_NAME)
+		self.index_users = {auth_users[i]:i for i in range(len(auth_users))}
+		for user in self.index_users.keys():
+			self.page.cbInsertUser.addItem(user)
+
 		if not self.pcb.record_insertion_user in self.index_users.keys() and len(self.index_users.keys())!=0 and not self.pcb.record_insertion_user is None:
 			# Insertion user is not in user page...fine for now, just add user to the dropdown
 			self.index_users[self.pcb.record_insertion_user] = max(self.index_users.values()) + 1
 			self.page.cbInsertUser.addItem(self.pcb.initiated_by_user)
 		self.page.cbInsertUser.setCurrentIndex(self.index_users.get(self.pcb.record_insertion_user, -1))
 
-		self.page.cbInstitution.setCurrentIndex(   INDEX_INSTITUTION.get(    self.pcb.location_name, -1)   )
-		self.page.leLocation.setText(    "" if self.pcb.institution_location       is None else self.pcb.institution_location    )
+		self.page.cbInstitution.setCurrentIndex(   INDEX_INSTITUTION.get(    self.pcb.location, -1)   )
+		#self.page.leLocation.setText(    "" if self.pcb.institution_location       is None else self.pcb.institution_location    )
 
 		self.page.leBarcode.setText(     "" if self.pcb.barcode        is None else self.pcb.barcode     )
-		#self.page.leManufacturer.setText("" if self.pcb.manufacturer   is None else self.pcb.manufacturer)
-		# may be unnecessary now...
-		#self.page.cbType.setCurrentIndex(          INDEX_TYPE.get(           self.pcb.type,-1)           )
 		self.page.cbResolution.setCurrentIndex(INDEX_CHANNEL.get(self.pcb.channel_density,-1))
 		# may be unnecessary now
-		#self.page.sbNumRocs.setValue( -1 if self.pcb.num_rocs is None else self.pcb.num_rocs)
-		#self.page.sbChannels.setValue(-1 if self.pcb.channels is None else self.pcb.channels)
-		#if self.page.sbChannels.value() == -1: self.page.sbChannels.clear()
 		self.page.cbShape.setCurrentIndex(         INDEX_SHAPE.get(          self.pcb.geometry,-1)          )
 
 		self.page.listComments.clear()
 		if self.pcb.comments:
-			for comment in self.pcb.comments.split(";;"):
+			for comment in self.pcb.comments.split(';;'):
 				self.page.listComments.addItem(comment)
 		self.page.pteWriteComment.clear()
 
@@ -209,8 +194,8 @@ class func(object):
 		"""
 		# ;;-separated list of files
 		self.page.listFiles.clear()
-		if self.pcb.test_file_name:
-			for f in self.pcb.test_file_name.split(";;"):
+		if self.pcb.test_files:
+			for f in self.pcb.test_files.split(";;"):
 				#name = os.path.split(f)[1]
 				self.page.listFiles.addItem(f)
 
@@ -244,16 +229,13 @@ class func(object):
 
 		self.page.cbInsertUser.setEnabled(         mode_creating or mode_editing  )
 		self.page.cbInstitution.setEnabled(        mode_creating or mode_editing  )
-		self.page.leLocation.setReadOnly(     not (mode_creating or mode_editing) )
+		#self.page.leLocation.setReadOnly(     not (mode_creating or mode_editing) )
 
 		self.page.leBarcode.setReadOnly(      not (mode_creating or mode_editing) )
-		self.page.leManufacturer.setReadOnly( not (mode_creating or mode_editing) )
 		#self.page.cbType.setEnabled(               mode_creating or mode_editing  )
 		self.page.cbResolution.setEnabled(         mode_creating or mode_editing  )
 		self.page.cbShape.setEnabled(              mode_creating or mode_editing  )
 		self.page.cbGrade.setEnabled(              mode_creating or mode_editing  )
-		#self.page.sbNumRocs.setReadOnly(      not (mode_creating or mode_editing) )
-		#self.page.sbChannels.setReadOnly(     not (mode_creating or mode_editing) )
 
 		self.page.pbDeleteComment.setEnabled(mode_creating or mode_editing)
 		self.page.pbAddComment.setEnabled(   mode_creating or mode_editing)
@@ -274,7 +256,7 @@ class func(object):
 			self.page.leStatus.setText("input an ID")
 			return
 		# Check whether baseplate exists:
-		tmp_pcb = fm.pcb()
+		tmp_pcb = parts.pcb()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_pcb.load(tmp_ID)
 		if not tmp_exists:  # DNE; good to create
@@ -290,7 +272,7 @@ class func(object):
 		if self.page.leID.text() == "":
 			self.page.leStatus.setText("input an ID")
 			return
-		tmp_pcb = fm.pcb()
+		tmp_pcb = parts.pcb()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_pcb.load(tmp_ID)
 		if not tmp_exists:
@@ -303,7 +285,7 @@ class func(object):
 
 	@enforce_mode('view')
 	def startEditing(self,*args,**kwargs):
-		tmp_pcb = fm.pcb()
+		tmp_pcb = parts.pcb()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_pcb.load(tmp_ID)
 		if not tmp_exists:
@@ -323,11 +305,10 @@ class func(object):
 	def saveEditing(self,*args,**kwargs):
 
 		self.pcb.record_insertion_user  = str(self.page.cbInsertUser.currentText())  if str(self.page.cbInsertUser.currentText())  else None
-		self.pcb.location_name     = str(self.page.cbInstitution.currentText()) if str(self.page.cbInstitution.currentText()) else None
-		self.pcb.institution_location        = str(self.page.leLocation.text()         )  if str(self.page.leLocation.text()          ) else None
+		self.pcb.location     = str(self.page.cbInstitution.currentText()) if str(self.page.cbInstitution.currentText()) else None
+		#self.pcb.institution_location        = str(self.page.leLocation.text()         )  if str(self.page.leLocation.text()          ) else None
 
 		self.pcb.barcode         = str(self.page.leBarcode.text()          )  if str(self.page.leBarcode.text()           ) else None
-		#self.pcb.manufacturer    = str(self.page.leManufacturer.text()     )  if str(self.page.leManufacturer.text()      ) else None
 		self.pcb.channel_density      = str(self.page.cbResolution.currentText())  if str(self.page.cbResolution.currentText()       ) else None
 		#self.pcb.type            = str(self.page.cbType.currentText()      )  if str(self.page.cbType.currentText()       ) else None
 		#self.pcb.num_rocs        = self.page.sbNumRocs.value()  if self.page.sbNumRocs.value()  >=0 else None
@@ -336,7 +317,6 @@ class func(object):
 
 		num_comments = self.page.listComments.count()
 		self.pcb.comments = ';;'.join([self.page.listComments.item(i).text() for i in range(num_comments)])
-		if num_comments == 0:  self.pcb.comments = ';;'
 
 		self.pcb.flatness   =     self.page.dsbFlatness.value()         if     self.page.dsbFlatness.value()  >=0    else None
 		self.pcb.thickness  =     self.page.dsbThickness.value()        if     self.page.dsbThickness.value() >=0    else None
@@ -347,6 +327,8 @@ class func(object):
 		self.update_info()
 
 		self.xmlModList.append(self.pcb.ID)
+
+		self.pcb.generate_xml()
 
 
 	def xmlModified(self):
@@ -399,7 +381,10 @@ class func(object):
 				new_filepath = "_upload.".join(tmp_filepath)
 				shutil.copyfile(f, new_filepath)
 				self.page.listComments.addItem(new_filepath)
-				self.pcb.test_file_name.append(new_filepath)
+				if self.fsobj_pt.test_files:
+					self.fsobj_pt.test_files += ';;' + tmp_filename
+				else:
+					self.pcb.test_files = new_filepath
 			self.update_info()
 		else:
 			print("WARNING:  Failed to find root files in chosen directory!")
@@ -415,9 +400,9 @@ class func(object):
 			#new_filepath = fdir + '/' + fname
 			os.remove(fname) #new_filepath)
 			#self.pcb.test_file_name.remove(new_filepath)
-			if self.pcb.test_file_name.replace(fname+";;", "") == fname+";;":
+			if self.pcb.test_files.replace(fname+";;", "") == fname+";;":
 				# if substr;; not found, is probably at the end of the list, so:
-				self.pcb.test_file_name.replace(fname, "")
+				self.pcb.test_files.replace(fname, "")
 			self.update_info()
 
 

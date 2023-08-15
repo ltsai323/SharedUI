@@ -186,8 +186,8 @@
    <widget class="QPushButton" name="pbSave">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>80</y>
+      <x>100</x>
+      <y>50</y>
       <width>71</width>
       <height>21</height>
      </rect>
@@ -199,7 +199,7 @@
    <widget class="QPushButton" name="pbCancel">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>60</x>
       <y>80</y>
       <width>71</width>
       <height>21</height>
@@ -209,26 +209,10 @@
      <string>Cancel</string>
     </property>
    </widget>
-   <widget class="QPushButton" name="pbNew">
-    <property name="enabled">
-     <bool>true</bool>
-    </property>
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>50</y>
-      <width>71</width>
-      <height>21</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>New</string>
-    </property>
-   </widget>
    <widget class="QPushButton" name="pbEdit">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>20</x>
       <y>50</y>
       <width>71</width>
       <height>21</height>
@@ -383,6 +367,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-10.000000000000000</double>
     </property>
@@ -485,6 +472,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-10.000000000000000</double>
     </property>
@@ -542,6 +532,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
     </property>
@@ -564,6 +557,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -585,6 +581,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-10.000000000000000</double>
@@ -624,6 +623,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -661,6 +663,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>0</number>
     </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
@@ -700,6 +705,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
     </property>
@@ -738,6 +746,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
     </property>
@@ -759,6 +770,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
@@ -814,6 +828,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -836,6 +853,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -857,6 +877,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>0</number>
     </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
@@ -911,6 +934,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
@@ -989,6 +1015,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-10.000000000000000</double>
@@ -1072,6 +1101,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
     </property>
@@ -1110,6 +1142,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -1131,6 +1166,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>0</number>
     </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
@@ -1186,6 +1224,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -1208,6 +1249,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
     </property>
@@ -1229,6 +1273,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
@@ -1268,6 +1315,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -1289,6 +1339,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-10.000000000000000</double>
@@ -1356,6 +1409,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
     </property>
@@ -1377,6 +1433,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
@@ -1416,6 +1475,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>0</number>
+    </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
     </property>
@@ -1437,6 +1499,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>0</number>
     </property>
     <property name="minimum">
      <double>-1000.000000000000000</double>
@@ -1504,6 +1569,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-180.000000000000000</double>
     </property>
@@ -1542,6 +1610,9 @@
     <property name="readOnly">
      <bool>false</bool>
     </property>
+    <property name="decimals">
+     <number>3</number>
+    </property>
     <property name="minimum">
      <double>-1.000000000000000</double>
     </property>
@@ -1563,6 +1634,9 @@
     </property>
     <property name="readOnly">
      <bool>false</bool>
+    </property>
+    <property name="decimals">
+     <number>3</number>
     </property>
     <property name="minimum">
      <double>-10.000000000000000</double>

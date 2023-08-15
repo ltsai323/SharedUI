@@ -56,7 +56,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Baseplate ID</string>
+     <string>Baseplate serial</string>
     </property>
     <property name="readOnly">
      <bool>true</bool>
@@ -169,7 +169,7 @@
      <x>20</x>
      <y>160</y>
      <width>261</width>
-     <height>441</height>
+     <height>421</height>
     </rect>
    </property>
    <property name="frameShape">
@@ -178,27 +178,11 @@
    <property name="frameShadow">
     <enum>QFrame::Plain</enum>
    </property>
-   <widget class="QLineEdit" name="lineEdit_11">
-    <property name="geometry">
-     <rect>
-      <x>1</x>
-      <y>41</y>
-      <width>121</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string>Location</string>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="lineEdit_3">
     <property name="geometry">
      <rect>
       <x>1</x>
-      <y>99</y>
+      <y>79</y>
       <width>161</width>
       <height>21</height>
      </rect>
@@ -210,27 +194,11 @@
      <bool>true</bool>
     </property>
    </widget>
-   <widget class="QLineEdit" name="leLocation">
-    <property name="geometry">
-     <rect>
-      <x>119</x>
-      <y>41</y>
-      <width>141</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="text">
-     <string/>
-    </property>
-    <property name="readOnly">
-     <bool>true</bool>
-    </property>
-   </widget>
    <widget class="QLineEdit" name="lineEdit_15">
     <property name="geometry">
      <rect>
       <x>1</x>
-      <y>120</y>
+      <y>100</y>
       <width>161</width>
       <height>20</height>
      </rect>
@@ -246,7 +214,7 @@
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>99</y>
+      <y>79</y>
       <width>101</width>
       <height>21</height>
      </rect>
@@ -304,7 +272,7 @@
     <property name="geometry">
      <rect>
       <x>159</x>
-      <y>80</y>
+      <y>60</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -320,7 +288,7 @@
     <property name="geometry">
      <rect>
       <x>1</x>
-      <y>80</y>
+      <y>60</y>
       <width>161</width>
       <height>21</height>
      </rect>
@@ -349,7 +317,7 @@
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>120</y>
+      <y>100</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -389,12 +357,7 @@
     </item>
     <item>
      <property name="text">
-      <string>Full</string>
-     </property>
-    </item>
-    <item>
-     <property name="text">
-      <string>Three</string>
+      <string>Full+Three</string>
      </property>
     </item>
    </widget>
@@ -402,7 +365,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>420</y>
+      <y>400</y>
       <width>111</width>
       <height>21</height>
      </rect>
@@ -415,7 +378,7 @@
     <property name="geometry">
      <rect>
       <x>140</x>
-      <y>180</y>
+      <y>170</y>
       <width>121</width>
       <height>21</height>
      </rect>
@@ -428,7 +391,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>200</y>
+      <y>190</y>
       <width>261</width>
       <height>141</height>
      </rect>
@@ -438,7 +401,7 @@
     <property name="geometry">
      <rect>
       <x>1</x>
-      <y>180</y>
+      <y>170</y>
       <width>141</width>
       <height>21</height>
      </rect>
@@ -454,7 +417,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>350</y>
+      <y>330</y>
       <width>261</width>
       <height>71</height>
      </rect>
@@ -467,7 +430,7 @@
     <property name="geometry">
      <rect>
       <x>160</x>
-      <y>140</y>
+      <y>120</y>
       <width>101</width>
       <height>20</height>
      </rect>
@@ -490,7 +453,7 @@
     <property name="geometry">
      <rect>
       <x>0</x>
-      <y>140</y>
+      <y>120</y>
       <width>161</width>
       <height>20</height>
      </rect>
@@ -575,9 +538,7 @@
      </property>
     </item>
    </widget>
-   <zorder>lineEdit_11</zorder>
    <zorder>lineEdit_3</zorder>
-   <zorder>leLocation</zorder>
    <zorder>lineEdit_15</zorder>
    <zorder>cbMaterial</zorder>
    <zorder>lineEdit_39</zorder>
@@ -619,38 +580,6 @@
    </property>
    <property name="text">
     <string>Module</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_10">
-   <property name="geometry">
-    <rect>
-     <x>630</x>
-     <y>50</y>
-     <width>201</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>Corner numbering reference</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_13">
-   <property name="geometry">
-    <rect>
-     <x>760</x>
-     <y>90</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>A</string>
    </property>
   </widget>
   <widget class="QLabel" name="label_5">
@@ -785,155 +714,6 @@
      <double>0.050000000000000</double>
     </property>
    </widget>
-  </widget>
-  <widget class="QLabel" name="label_17">
-   <property name="geometry">
-    <rect>
-     <x>740</x>
-     <y>120</y>
-     <width>81</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>(Channel 1)</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_14">
-   <property name="geometry">
-    <rect>
-     <x>670</x>
-     <y>250</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>B</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_15">
-   <property name="geometry">
-    <rect>
-     <x>750</x>
-     <y>400</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>C</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_16">
-   <property name="geometry">
-    <rect>
-     <x>930</x>
-     <y>400</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>D</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_18">
-   <property name="geometry">
-    <rect>
-     <x>1020</x>
-     <y>250</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>E</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_19">
-   <property name="geometry">
-    <rect>
-     <x>930</x>
-     <y>90</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>16</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>F</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="label_11">
-   <property name="geometry">
-    <rect>
-     <x>830</x>
-     <y>240</y>
-     <width>51</width>
-     <height>16</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <family>Arial</family>
-     <pointsize>14</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>Front</string>
-   </property>
-  </widget>
-  <widget class="QLabel" name="plt_image">
-   <property name="geometry">
-    <rect>
-     <x>630</x>
-     <y>70</y>
-     <width>441</width>
-     <height>381</height>
-    </rect>
-   </property>
-   <property name="layoutDirection">
-    <enum>Qt::LeftToRight</enum>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap>pages_ui/pages_ui/new_baseplate.png</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
   </widget>
   <widget class="QComboBox" name="cbGrade">
    <property name="geometry">
@@ -1189,26 +969,6 @@
     <string>Standard information</string>
    </property>
   </widget>
-  <zorder>frame_2</zorder>
-  <zorder>frame_3</zorder>
-  <zorder>label_8</zorder>
-  <zorder>label_9</zorder>
-  <zorder>label_10</zorder>
-  <zorder>label_5</zorder>
-  <zorder>frame_4</zorder>
-  <zorder>plt_image</zorder>
-  <zorder>label_16</zorder>
-  <zorder>label_18</zorder>
-  <zorder>label_19</zorder>
-  <zorder>label_13</zorder>
-  <zorder>label_17</zorder>
-  <zorder>label_14</zorder>
-  <zorder>label_15</zorder>
-  <zorder>label_11</zorder>
-  <zorder>cbGrade</zorder>
-  <zorder>frame</zorder>
-  <zorder>frame_5</zorder>
-  <zorder>label_6</zorder>
  </widget>
  <resources/>
  <connections/>

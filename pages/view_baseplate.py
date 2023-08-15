@@ -1,4 +1,4 @@
-from filemanager import fm
+from filemanager import parts
 from PyQt5 import QtGui
 
 PAGE_NAME = "view_baseplate"
@@ -17,8 +17,7 @@ INDEX_SHAPE = {
 	'Left':3,
 	'Right':4,
 	'Five':5,
-	'Full':6,
-	'Three':7,
+	'Full+Three':6,
 }
 
 INDEX_CHECK = {
@@ -56,23 +55,19 @@ INDEX_GRADE = {
 }
 
 class func(object):
-	def __init__(self,fm,page,setUIPage,setSwitchingEnabled):
+	def __init__(self,fm,userManager,page,setUIPage,setSwitchingEnabled):
+		self.userManager = userManager
 		self.page      = page
 		self.setUIPage = setUIPage
 		self.setMainSwitchingEnabled = setSwitchingEnabled
 
 		self.baseplate_exists = False
-		self.baseplate = fm.baseplate()
+		self.baseplate = parts.baseplate()
 
 		self.mode = 'setup'
 
 		# NEW:  List of all modified XML files
 		self.xmlModList = []
-
-		# NEW:  Fix image location
-		pixmap = QtGui.QPixmap("pages_ui/pages_ui/baseplate_frame_80.png")
-
-		self.page.plt_image.setPixmap(pixmap)
 
 
 	def enforce_mode(mode):
@@ -132,11 +127,6 @@ class func(object):
 		self.page.pbDeleteComment.clicked.connect(self.deleteComment)
 		self.page.pbAddComment.clicked.connect(self.addComment)
 
-		auth_users = fm.userManager.getAuthorizedUsers(PAGE_NAME)
-		self.index_users = {auth_users[i]:i for i in range(len(auth_users))}
-		for user in self.index_users.keys():
-			self.page.cbInsertUser.addItem(user)
-
 
 	@enforce_mode(['view', 'editing', 'creating']) # NEW:  Now allowed in editing, creating mode
 	def update_info(self,do_load=True,ID=None):
@@ -148,30 +138,31 @@ class func(object):
 
 		self.baseplate_exists = (ID == self.baseplate.ID)
 
+		# Moved - get available users and fill cbInsertUser
+		self.page.cbInsertUser.clear()
+		auth_users = self.userManager.getAuthorizedUsers(PAGE_NAME)
+		self.index_users = {auth_users[i]:i for i in range(len(auth_users))}
+		for user in self.index_users.keys():
+			self.page.cbInsertUser.addItem(user)
+
 		# was insertion_user
 		if not self.baseplate.record_insertion_user in self.index_users.keys() and len(self.index_users.keys())!=0  and not self.baseplate.record_insertion_user is None:
-			# Insertion user was deleted from user page...just add user to the dropdown
 			self.index_users[self.baseplate.record_insertion_user] = max(self.index_users.values()) + 1
 			self.page.cbInsertUser.addItem(self.baseplate.record_insertion_user)
 		self.page.cbInsertUser.setCurrentIndex(self.index_users.get(self.baseplate.record_insertion_user, -1))
 
-		# institution -> location_name
-		# location -> institution_location
-		self.page.cbInstitution   .setCurrentIndex(INDEX_INSTITUTION.get(self.baseplate.location_name    , -1))
-		# location -> institution
-		self.page.leLocation      .setText("" if self.baseplate.institution_location is None else self.baseplate.institution_location)
+		self.page.cbInstitution   .setCurrentIndex(INDEX_INSTITUTION.get(self.baseplate.location    , -1))
+		#self.page.leLocation      .setText("" if self.baseplate.institution_location is None else self.baseplate.institution_location)
 
 		self.page.leBarcode       .setText("" if self.baseplate.barcode  is None else self.baseplate.barcode )
-		# was mat_type
-		self.page.cbMaterial      .setCurrentIndex(INDEX_MATERIAL   .get(self.baseplate.mat_type       , -1))
+		self.page.cbMaterial      .setCurrentIndex(INDEX_MATERIAL   .get(self.baseplate.material       , -1))
 		# was shape
 		self.page.cbShape         .setCurrentIndex(INDEX_SHAPE      .get(self.baseplate.geometry          , -1))
 		self.page.cbChannelDensity.setCurrentIndex(INDEX_CHANNEL    .get(self.baseplate.channel_density, -1))
 
-		# NEW:  Comments are now a ;;-separated string, manage here
 		self.page.listComments.clear()
-		if self.baseplate.comments:  # default=None
-			for comment in self.baseplate.comments.split(";;"):
+		if self.baseplate.comments:
+			for comment in self.baseplate.comments.split(';;'):
 				self.page.listComments.addItem(comment)
 		self.page.pteWriteComment.clear()
 
@@ -222,7 +213,7 @@ class func(object):
 
 		self.page.cbInsertUser.setEnabled(      mode_creating or mode_editing  )
 		self.page.cbInstitution.setEnabled(     mode_creating or mode_editing  )
-		self.page.leLocation.setReadOnly(  not (mode_creating or mode_editing) )
+		#self.page.leLocation.setReadOnly(  not (mode_creating or mode_editing) )
 
 		self.page.leBarcode.setReadOnly(   not (mode_creating or mode_editing) )
 		self.page.cbMaterial.setEnabled(        mode_creating or mode_editing  )
@@ -250,7 +241,7 @@ class func(object):
 			self.page.leStatus.setText("input an ID")
 			return
 		# Check whether baseplate exists:
-		tmp_baseplate = fm.baseplate()
+		tmp_baseplate = parts.baseplate()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_baseplate.load(tmp_ID)
 		if not tmp_exists:  # DNE; good to create
@@ -268,7 +259,7 @@ class func(object):
 			self.page.leStatus.setText("input an ID")
 			return
 		# Check whether baseplate exists:
-		tmp_baseplate = fm.baseplate()
+		tmp_baseplate = parts.baseplate()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_baseplate.load(tmp_ID)
 		if not tmp_exists:  # DNE; good to create
@@ -281,7 +272,7 @@ class func(object):
 
 	@enforce_mode('view')
 	def startEditing(self,*args,**kwargs):
-		tmp_baseplate = fm.baseplate()
+		tmp_baseplate = parts.baseplate()
 		tmp_ID = self.page.leID.text()
 		tmp_exists = tmp_baseplate.load(tmp_ID)
 		if not tmp_exists:
@@ -301,11 +292,11 @@ class func(object):
 	def saveEditing(self,*args,**kwargs):
 
 		self.baseplate.record_insertion_user    = str(self.page.cbInsertUser.currentText())  if str(self.page.cbInsertUser.currentText())  else None
-		self.baseplate.location_name = str(self.page.cbInstitution.currentText()) if str(self.page.cbInstitution.currentText()) else None
-		self.baseplate.institution_location          = str(self.page.leLocation.text())           if str(self.page.leLocation.text())           else None
+		self.baseplate.location = str(self.page.cbInstitution.currentText()) if str(self.page.cbInstitution.currentText()) else None
+		#self.baseplate.institution_location          = str(self.page.leLocation.text())           if str(self.page.leLocation.text())           else None
 
 		self.baseplate.barcode              = str(self.page.leBarcode.text())            if str(self.page.leBarcode.text())            else None
-		self.baseplate.mat_type             = str(self.page.cbMaterial.currentText())    if str(self.page.cbMaterial.currentText())    else None
+		self.baseplate.material             = str(self.page.cbMaterial.currentText())    if str(self.page.cbMaterial.currentText())    else None
 		self.baseplate.geometry             = str(self.page.cbShape.currentText())       if str(self.page.cbShape.currentText())       else None
 		self.baseplate.thickness            =     self.page.dsbThickness.value()         if self.page.dsbThickness.value() >=0         else None
 		self.baseplate.flatness             =     self.page.dsbFlatness.value()          if self.page.dsbFlatness.value() >= 0         else None
@@ -314,7 +305,6 @@ class func(object):
 
 		num_comments = self.page.listComments.count()
 		self.baseplate.comments = ';;'.join([self.page.listComments.item(i).text() for i in range(num_comments)])
-		if num_comments == 0:  self.baseplate.comments = ';;'
 
 		self.baseplate.save()
 		self.mode = 'view'
@@ -322,6 +312,7 @@ class func(object):
 
 		self.xmlModList.append(self.baseplate.ID)
 
+		self.baseplate.generate_xml()
 
 	def xmlModified(self):
 		return self.xmlModList
