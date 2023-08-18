@@ -28,6 +28,12 @@ INSTITUTION_INDEX = {  # Can probably be replaced w/ list
 	3:'UMN',
 	4:'HEPHY',
 	5:'HPK',
+    6:'CMU',
+    7:'TTU',
+    8:'IHEP',
+    9:'TIFR',
+    10:'NTU',
+    11:'FSU'
 }
 
 class simple_fsobj_vc(object):
