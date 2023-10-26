@@ -19,8 +19,6 @@ import csv
 import jinja2
 
 #import rhapi_nolock as rh
-# For DB requests:
-import cx_Oracle
 from xml.dom import minidom
 
 
@@ -89,7 +87,7 @@ class fsobj_part(fm.fsobj):
 
 	def __init__(self):
 		self.PROPERTIES = self.PART_PROPERTIES + self.EXTRA_PROPERTIES
-		self.DEFAULTS = self.PART_DEFAULTS | self.EXTRA_DEFAULTS  # | == incl or
+		self.DEFAULTS = {**self.PART_DEFAULTS, **self.EXTRA_DEFAULTS}  #self.PART_DEFAULTS | self.EXTRA_DEFAULTS  # | == incl or
 		super(fsobj_part, self).__init__()
 
 
@@ -158,6 +156,7 @@ class baseplate(fsobj_part):
 		# build_cond file:
 		# other:
 		'protomodule',
+		'module',
 		'step_sensor',
 		# GUI-only:
 		'barcode',
@@ -246,6 +245,7 @@ class sensor(fsobj_part):
 		'test_files', #_name',
 		# other:
 		'protomodule',
+		'module',
 		'step_sensor',
 		# GUI only:
 		'barcode',
@@ -482,13 +482,13 @@ class protomodule(fsobj_part):
 
 	# Note:  baseplate_material determines calorimeter_type!
 	@property
-	def baseplate_material(self):
+	def baseplate_material(self):  # avoid accessing it without setter
 		if self.kind_of_part == "None None Si ProtoModule None None":  return None
 		em_or_had = self.kind_of_part.split()[0]
 		return 'CuW/Kapton' if em_or_had == 'EM' else 'PCB/Kapton'
 	@baseplate_material.setter
 	def baseplate_material(self, value):
-		# CuW -> EM, PCB -> HAD
+		# CuW -> EM, PCB -> HAD, CF -> HAD
 		splt = self.kind_of_part.split(" ")
 		splt[0] = 'EM' if value == 'CuW/Kapton' else 'HAD'
 		self.kind_of_part = " ".join(splt)
@@ -571,10 +571,12 @@ class protomodule(fsobj_part):
 
 	@property
 	def adhesive_type(self):
-		if self.batch_tape_50 != None:
-			return self.batch_tape_50 + ";;" + self.batch_tape_120
-		else:
+		if self.glue_batch_num != None:
 			return self.glue_batch_num
+		t = []
+		for tp in [self.batch_tape_50, self.batch_tape_120]:
+			if tp != None:  t.append(tp)
+		return ';;'.join(tp)
 
 
 	## Functions
@@ -754,13 +756,13 @@ class module(fsobj_part):
 
 	# Note:  baseplate_material determines calorimeter_type!
 	@property
-	def baseplate_material(self):
+	def baseplate_material(self):  # avoid accessing it without setter
 		if self.kind_of_part == "None None Si Module None None":  return None
 		em_or_had = self.kind_of_part.split()[0]
 		return 'CuW/Kapton' if em_or_had == 'EM' else 'PCB/Kapton'
 	@baseplate_material.setter
 	def baseplate_material(self, value):
-		# CuW -> EM, PCB -> HAD
+		# CuW -> EM, PCB -> HAD, CF -> HAD
 		splt = self.kind_of_part.split(" ")
 		splt[0] = 'EM' if value == 'CuW/Kapton' else 'HAD'
 		self.kind_of_part = " ".join(splt)
@@ -835,7 +837,7 @@ class module(fsobj_part):
 	
 	@property
 	def wirebonding_completed(self):
-		print("back {} inspxn {}\nfront {} inspxn {}\nbacken {} fronen {}\nfinal {}".format(self.back_bonds, self.back_bond_inspxn, self.front_bonds, self.front_bond_inspxn, self.back_encap_inspxn, self.front_encap_inspxn, self.final_inspxn_ok))
+		#print("WIREBONDING COMPLETED?: back {} inspxn {}\nfront {} inspxn {}\nbacken {} fronen {}\nfinal {}".format(self.back_bonds, self.back_bond_inspxn, self.front_bonds, self.front_bond_inspxn, self.back_encap_inspxn, self.front_encap_inspxn, self.final_inspxn_ok))
 		return self.back_bonds and \
 		self.back_bond_inspxn and \
 		self.front_bonds and \
@@ -846,10 +848,12 @@ class module(fsobj_part):
 
 	@property
 	def adhesive_type(self):
-		if self.batch_tape_50 != None:
-			return self.batch_tape_50 + ";;" + self.batch_tape_120
-		else:
+		if self.glue_batch_num != None:
 			return self.glue_batch_num
+		t = []
+		for tp in [self.batch_tape_50, self.batch_tape_120]:
+			if tp != None:  t.append(tp)
+		return ';;'.join(tp)
 
 
 	# new():  Optionally, create proto from baseplate and sensor objects

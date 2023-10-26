@@ -2,13 +2,15 @@ from filemanager import fm, supplies, parts
 from PyQt5 import QtCore
 import time
 import datetime
+import os
+import json
 
 # - Loads a MODULE.  All wirebonding info will be stored in the corresp module object.
 
 PAGE_NAME = "view_wirebonding"
 DEBUG = False
 SITE_SEP = ', '
-NO_DATE = [2022,1,1]
+NO_DATE = [2023, 1, 1] #time.localtime()[:3]
 
 INDEX_INSPECTION = {
 	'yes':0,
@@ -44,6 +46,9 @@ class func(object):
 
 		self.module = parts.module()
 		self.module_exists = None
+		self.batch_sylgard = supplies.batch_sylgard()
+		self.batch_bond_wire = supplies.batch_bond_wire()
+		self.batch_wedge = supplies.batch_wedge()
 		self.mode = 'setup'
 
 		# NEW
@@ -99,6 +104,9 @@ class func(object):
 		self.page.pbSave.clicked.connect(self.saveEditing)
 		self.page.pbCancel.clicked.connect(self.cancelEditing)
 
+		self.page.pbBondStartNowBack.clicked.connect(self.bondStartNowBack)
+		self.page.pbBondStartNowFront.clicked.connect(self.bondStartNowFront)
+
 		self.page.pbCureStartNowBack.clicked.connect(self.cureStartNowBack)
 		self.page.pbCureStopNowBack.clicked.connect( self.cureStopNowBack )
 		self.page.pbCureStartNowFront.clicked.connect(self.cureStartNowFront)
@@ -138,6 +146,12 @@ class func(object):
 		for user in self.index_users_fi.keys():
 			self.page.cbWirebondingFinalInspectionUser.addItem(user)
 
+		self.page.pbAddPart.clicked.connect(self.finishSearch)
+		self.page.pbCancelSearch.clicked.connect(self.cancelSearch)
+		self.page.pbGoBatchSylgard.clicked.connect(self.goBatchSylgard)
+		self.page.pbGoBatchBondWire.clicked.connect(self.goBatchBondWire)
+		self.page.pbGoBatchWedge.clicked.connect(self.goBatchWedge)
+
 
 	@enforce_mode(['view', 'editing'])
 	def update_info(self,ID=None,*args,**kwargs):
@@ -155,7 +169,8 @@ class func(object):
 						(self.module.front_bonds_date, self.page.dWirebondingFront)]
 		for st, dt in dates_to_set:
 			if st is None:
-				dt.setDate(QtCore.QDate(*NO_DATE))
+				localtime = time.localtime()
+				dt.setDate(QtCore.QDate(localtime.tm_year, 1, 1))
 			else:
 				tm = datetime.datetime.strptime(st, "%Y-%m-%d")
 				dat = QtCore.QDate(tm.year, tm.month, tm.day)
@@ -208,7 +223,8 @@ class func(object):
 						(self.module.front_encap_cure_stop, self.page.dtCureStopFront)]
 		for st, dt in times_to_set:
 			if st is None:
-				dt.setDate(QtCore.QDate(*NO_DATE))
+				localtime = time.localtime()
+				dt.setDate(QtCore.QDate(localtime.tm_year, 1, 1))
 				dt.setTime(QtCore.QTime(0,0,0))
 			else:
 				tm = datetime.datetime.strptime(st, "%Y-%m-%d %H:%M:%S%z")
@@ -260,12 +276,13 @@ class func(object):
 		self.updateElements()
 
 
-	@enforce_mode(['view','editing'])
+	@enforce_mode(['view','editing','searching'])
 	def updateElements(self):
 		module_exists   = self.module_exists
 
-		mode_view     = self.mode == 'view'
-		mode_editing  = self.mode == 'editing'
+		mode_view      = self.mode == 'view'
+		mode_editing   = self.mode == 'editing'
+		mode_searching = self.mode == 'searching'
 
 		self.setMainSwitchingEnabled(mode_view) 
 		self.page.leID.setReadOnly(not mode_view)
@@ -336,6 +353,21 @@ class func(object):
 		self.page.cbWirebondingFinalInspectionUser.setEnabled( mode_editing )
 		self.page.cbWirebondingFinalInspectionOK.setEnabled(   mode_editing )
 
+		# search page:
+		self.page.pbGoBatchSylgard.setEnabled( mode_editing or (mode_view and self.page.leBatchSylgard.text() != ""))
+		self.page.pbGoBatchBondWire.setEnabled(mode_editing or (mode_view and self.page.leBatchBondWire.text() != ""))
+		self.page.pbGoBatchWedge.setEnabled(   mode_editing or (mode_view and self.page.leBatchWedge.text() != ""))
+
+		self.page.pbAddPart     .setEnabled(mode_searching)
+		self.page.pbCancelSearch.setEnabled(mode_searching)
+
+		# NEW:  Update pb's based on search result
+		syl = self.page.leBatchSylgard.text()
+		self.page.pbGoBatchSylgard.setText("select" if syl == "" else "go to")
+		bnd = self.page.leBatchBondWire.text()
+		self.page.pbGoBatchBondWire.setText("select" if bnd == "" else "go to")
+		wdg = self.page.leBatchWedge.text()
+		self.page.pbGoBatchWedge.setText("select" if wdg == "" else "go to")
 
 
 	@enforce_mode('view')
@@ -398,9 +430,9 @@ class func(object):
 		# characteristics
 
 		datew = self.page.dWirebondingBack.date().toPyDate()
-		self.module.wirebonding_date_back  = str(datew)
+		self.module.back_bonds_date  = str(datew)
 		datew = self.page.dWirebondingFront.date().toPyDate()
-		self.module.wirebonding_date_front = str(datew)
+		self.module.front_bonds_date = str(datew)
 
 		# comments
 		num_comments = self.page.listComments.count()
@@ -427,16 +459,10 @@ class func(object):
 		self.module.back_encap            = self.page.ckEncapsulationBack.isChecked()
 		self.module.back_encap_user       = str(self.page.cbEncapsulationUserBack.currentText()             ) if str(self.page.cbEncapsulationUserBack.currentText()             ) else None
 		self.module.back_encap_inspxn = str(self.page.cbEncapsulationInspectionBack.currentText()) if str(self.page.cbEncapsulationInspectionBack.currentText()) else None
-		if self.page.dtCureStartBack.date().year() == NO_DATE[0]:
-			self.module.back_encap_cure_start = None
-		else:
-			pydt = self.page.dtCureStartBack.dateTime().toPyDateTime().astimezone(datetime.timezone.utc)
-			self.module.back_encap_cure_start = str(pydt)
-		if self.page.dtCureStopBack.date().year() == NO_DATE[0]:
-			self.module.back_encap_cure_stop = None
-		else:
-			pydt = self.page.dtCureStopBack.dateTime().toPyDateTime().astimezone(datetime.timezone.utc)
-			self.module.back_encap_cure_stop = str(pydt)
+		pydt = self.page.dtCureStartBack.dateTime().toPyDateTime().astimezone(datetime.timezone.utc)
+		self.module.back_encap_cure_start = str(pydt)
+		pydt = self.page.dtCureStopBack.dateTime().toPyDateTime().astimezone(datetime.timezone.utc)
+		self.module.back_encap_cure_stop = str(pydt)
 
 		# test bonds
 		self.module.is_test_bond_module             = self.page.ckTestBonds.isChecked()
@@ -472,6 +498,108 @@ class func(object):
 		self.xmlModList.append(self.module.ID)
 
 
+	@enforce_mode('editing')
+	def loadBatchSylgard(self, *args, **kwargs):
+		self.batch_sylgard.load(self.page.leBatchSylgard.text())
+
+	@enforce_mode('editing')
+	def loadBatchBondWire(self, *args, **kwargs):
+		self.batch_bond_wire.load(self.page.leBatchBondWire.text())
+
+	@enforce_mode('editing')
+	def loadBatchWedge(self, *args, **kwargs):
+		self.batch_wedge.load(self.page.leBatchWedge.text())
+
+
+	def doSearch(self,*args,**kwargs):
+		tmp_class = getattr(parts, self.search_part, None)
+		if tmp_class is None:
+			tmp_class = getattr(supplies, self.search_part)
+			tmp_part = tmp_class()
+
+		# Search local-only parts:  open part file
+		part_file_name = os.sep.join([ fm.DATADIR, 'partlist', self.search_part+'s.json' ])
+		with open(part_file_name, 'r') as opfl:
+			part_list = json.load(opfl)
+
+		for part_id, date in part_list.items():
+			# If already added by DB query, skip:
+			if len(self.page.lwPartList.findItems("{} {}".format(self.search_part, part_id), \
+                                                  QtCore.Qt.MatchExactly)) > 0:
+				continue
+			self.page.lwPartList.addItem("{} {}".format(self.search_part, part_id))
+			if self.search_part == 'batch_sylgard':
+				self.loadBatchSylgard()
+			elif self.search_part == 'batch_bond_wire':
+				self.loadBatchBondWire()
+			elif self.search_part == 'batch_wedge':
+				self.loadBatchWedge()
+		# Sort search results
+		self.page.lwPartList.sortItems()
+
+		self.page.leSearchStatus.setText("Searched: "+self.search_part)
+		self.mode = 'searching'
+		self.updateElements()
+
+	def finishSearch(self,*args,**kwargs):
+		row = self.page.lwPartList.currentRow()
+		if self.page.lwPartList.item(row) is None:
+			return
+		name = self.page.lwPartList.item(row).text().split()[1]
+		if self.search_part == "batch_sylgard":
+			le_to_fill = self.page.leBatchSylgard
+		elif self.search_part == "batch_bond_wire":
+			le_to_fill = self.page.leBatchBondWire
+		elif self.search_part == "batch_wedge":
+			le_to_fill = self.page.leBatchWedge
+		le_to_fill.setText(name)
+
+		self.page.lwPartList.clear()
+		self.page.leSearchStatus.clear()
+		self.mode = 'editing'
+		if self.search_part == "batch_sylgard":
+			self.loadBatchSylgard()
+		elif self.search_part == "batch_bond_wire":
+			self.loadBatchBondWire()
+		elif self.search_part == "batch_wedge":
+			self.loadBatchWedge()
+		self.updateElements()
+
+	def cancelSearch(self,*args,**kwargs):
+		self.page.lwPartList.clear()
+		self.page.leSearchStatus.clear()
+		self.mode = 'editing'
+		self.updateElements()
+
+
+	def goBatchSylgard(self,*args,**kwargs):
+		batch_sylgard = self.page.leBatchSylgard.text()
+		if batch_sylgard != "":
+			self.setUIPage('Supplies',batch_sylgard=batch_sylgard)
+		else:
+			self.mode = 'searching'
+			self.search_part = 'batch_sylgard'
+			self.doSearch()
+
+	def goBatchBondWire(self,*args,**kwargs):
+		batch_bond_wire = self.page.leBatchBondWire.text()
+		if batch_bond_wire != "":
+			self.setUIPage('Supplies',batch_bond_wire=batch_bond_wire)
+		else:
+			self.mode = 'searching'
+			self.search_part = 'batch_bond_wire'
+			self.doSearch()
+
+	def goBatchWedge(self,*args,**kwargs):
+		batch_wedge = self.page.leBatchWedge.text()
+		if batch_wedge != "":
+			self.setUIPage('Supplies',batch_wedge=batch_wedge)
+		else:
+			self.mode = 'searching'
+			self.search_part = 'batch_wedge'
+			self.doSearch()
+
+
 
 	def xmlModified(self):
 		return self.xmlModList
@@ -479,6 +607,16 @@ class func(object):
 	def xmlModifiedReset(self):
 		self.xmlModList = []
 
+
+	@enforce_mode('editing')
+	def bondStartNowBack(self, *args, **kwargs):
+		localtime = time.localtime()
+		self.page.dWirebondingBack.setDate(QtCore.QDate(*localtime[0:3]))
+
+	@enforce_mode('editing')
+	def bondStartNowFront(self, *args, **kwargs):
+		localtime = time.localtime()
+		self.page.dWirebondingFront.setDate(QtCore.QDate(*localtime[0:3]))
 
 	@enforce_mode('editing')
 	def cureStartNowBack(self, *args, **kwargs):

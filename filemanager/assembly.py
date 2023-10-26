@@ -8,8 +8,6 @@ from PyQt5 import QtCore
 import datetime
 
 #import rhapi_nolock as rh
-# For DB requests:
-import cx_Oracle
 
 from filemanager import fm, parts
 
@@ -66,10 +64,14 @@ class fsobj_step(fm.fsobj):
 
 	def generate_xml(self):
 		tmp_part = self.PART_CLASS()
+		print("GENERATING XML")
+		print("part class is:", self.PART_CLASS)
 		parts = getattr(self, self.PART+"s", None)
+		print("found parts:", parts)
 		for i in range(6):
 			if not parts[i]:  continue
 			tmp_part.load(parts[i])
+			print("Generating xml for:", parts[i])
 			tmp_part.generate_xml()
 
 
