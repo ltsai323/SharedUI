@@ -105,3 +105,4 @@ venv.bak/
 
 # filemanager config
 filemanager/config.txt
+filemanager_data
